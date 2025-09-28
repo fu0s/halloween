@@ -6,380 +6,272 @@ let activeFilters = {
     maxPrice: 50
 };
 
-// Initialize filters with unique values from data
-function initializeFilters() {
-    const venues = [...new Set(parties.map(party => party.venue))].sort();
-    const genres = [...new Set(parties.map(party => party.genre))].sort();
+/**
+ * Helper function to create a Bootstrap List Group Checkbox item
+ * @param {string} type - 'cities', 'venues', or 'genres'
+ * @param {string} value - The filter value (e.g., 'Cologne', 'Stahlwerk', 'Techno')
+ */
+function createFilterItem(type, value) {
+    const li = document.createElement('li');
+    li.className = 'list-group-item bg-dark text-white border-secondary';
 
-    // Initialize venue filters
-    const venueList = document.getElementById('venueList');
-    venues.forEach(venue => {
-        const label = document.createElement('label');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.value = venue;
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                activeFilters.venues.add(venue);
-            } else {
-                activeFilters.venues.delete(venue);
+    const input = document.createElement('input');
+    input.className = 'form-check-input me-2';
+    input.type = 'checkbox';
+    input.value = value;
+    // Use the value and type to create a unique ID for the label association
+    input.id = `${type}-${value.replace(/[^a-zA-Z0-9]/g, '-')}`;
+
+    const label = document.createElement('label');
+    label.className = 'form-check-label';
+    label.setAttribute('for', input.id);
+    label.textContent = value;
+
+    input.addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        const filterSet = activeFilters[type];
+        
+        // Update state
+        if (checked) {
+            filterSet.add(value);
+        } else {
+            filterSet.delete(value);
+        }
+
+        // Keep the state of the mirrored checkboxes (desktop/mobile) in sync
+        document.querySelectorAll(`input[value="${value}"][type="checkbox"]`).forEach(mirrorInput => {
+            if (mirrorInput !== e.target) {
+                mirrorInput.checked = checked;
             }
-            filterParties();
-            updateActiveFilters();
         });
-        
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(venue));
-        venueList.appendChild(label);
-    });
 
-    // Initialize genre filters
-    const genreList = document.getElementById('genreList');
-    genres.forEach(genre => {
-        const item = document.createElement('div');
-        item.className = 'collection-item';
-        
-        const label = document.createElement('label');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'filled-in';
-        
-        const span = document.createElement('span');
-        span.textContent = genre;
-        
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                activeFilters.genres.add(genre);
-            } else {
-                activeFilters.genres.delete(genre);
-            }
-            filterParties();
-            updateActiveFilters();
-        });
-        
-        label.appendChild(checkbox);
-        label.appendChild(span);
-        item.appendChild(label);
-        genreList.appendChild(item);
-    });
-
-    // Initialize city tags
-    const cityTags = document.getElementById('cityTags').children;
-    Array.from(cityTags).forEach(tag => {
-        tag.addEventListener('click', () => {
-            const city = tag.dataset.city;
-            tag.classList.toggle('active');
-            if (tag.classList.contains('active')) {
-                activeFilters.cities.add(city);
-            } else {
-                activeFilters.cities.delete(city);
-            }
-            filterParties();
-            updateActiveFilters();
-        });
-    });
-
-    // Initialize price slider
-    const priceSlider = document.getElementById('priceSlider');
-    const priceValue = document.getElementById('priceValue');
-    priceSlider.addEventListener('input', (e) => {
-        const value = e.target.value;
-        priceValue.textContent = `0-${value}€`;
-        activeFilters.maxPrice = parseInt(value);
         filterParties();
         updateActiveFilters();
     });
 
-    // Initialize Material components
-    initializeMaterialComponents();
-
-    // Initialize clear filters button
-    document.getElementById('clearFilters').addEventListener('click', clearAllFilters);
+    li.appendChild(input);
+    li.appendChild(label);
+    return li;
 }
 
-// Initialize Material Design components and event listeners
-function initializeMaterialComponents() {
-    // Initialize sidenav for mobile filters
-    const mobileFilters = document.querySelector('#mobile-filters');
-    M.Sidenav.init(mobileFilters, {
-        edge: 'right',
-        draggable: true
+/**
+ * Function to populate a filter list (used for both desktop and mobile)
+ */
+function populateFilterList(listElementId, type, values) {
+    const listElement = document.getElementById(listElementId);
+    if (!listElement) return;
+    listElement.innerHTML = ''; 
+    values.forEach(value => {
+        listElement.appendChild(createFilterItem(type, value));
     });
+}
 
-    // Initialize chips for active filters
-    const chips = document.querySelectorAll('.chips');
-    M.Chips.init(chips, {
-        placeholder: 'Active filters',
-        secondaryPlaceholder: '+Filter',
-        onChipDelete: (el, chip) => {
-            const filterText = chip.textContent.trim();
-            removeFilterByText(filterText);
+// Initialize filters with unique values from data
+function initializeFilters() {
+    const cities = [...new Set(parties.map(party => party.city))].sort();
+    const venues = [...new Set(parties.map(party => party.venue))].sort();
+    const genres = [...new Set(parties.map(party => party.genre))].sort();
+    
+    // Populate all list sections (desktop and mobile)
+    populateFilterList('cityList', 'cities', cities);
+    populateFilterList('cityListMobile', 'cities', cities);
+    populateFilterList('venueList', 'venues', venues);
+    populateFilterList('venueListMobile', 'venues', venues);
+    populateFilterList('genreList', 'genres', genres);
+    populateFilterList('genreListMobile', 'genres', genres);
+    
+    // Price Slider logic (linking desktop and mobile sliders)
+    const priceSlider = document.getElementById('priceSlider');
+    const priceSliderMobile = document.getElementById('priceSliderMobile');
+    const priceValue = document.getElementById('priceValue');
+    const priceValueMobile = document.getElementById('priceValueMobile');
+
+    // Sync function for both sliders
+    function syncPriceSlider(e) {
+        const val = parseInt(e.target.value);
+        activeFilters.maxPrice = val;
+        
+        // Update the value display on both
+        if(priceValue) priceValue.textContent = `0-${val}€`;
+        if(priceValueMobile) priceValueMobile.textContent = `0-${val}€`;
+        
+        // Sync the slider position on the other element
+        if (e.target === priceSlider) {
+            if(priceSliderMobile) priceSliderMobile.value = val;
+        } else {
+            if(priceSlider) priceSlider.value = val;
         }
-    });
-
-    // Add event listeners for filter toggle buttons
-    document.querySelectorAll('.toggle-filters').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const instance = M.Sidenav.getInstance(filtersSidenav);
-            instance.isOpen ? instance.close() : instance.open();
-        });
-    });
+        
+        filterParties();
+    }
+    
+    if (priceSlider) {
+        priceSlider.addEventListener('input', syncPriceSlider);
+    }
+    if (priceSliderMobile) {
+        priceSliderMobile.addEventListener('input', syncPriceSlider);
+    }
 }
 
-// Filter parties based on active filters
+// Filter the party data based on active filters
 function filterParties() {
     const filteredParties = parties.filter(party => {
-        const matchesCity = activeFilters.cities.size === 0 || activeFilters.cities.has(party.city);
-        const matchesVenue = activeFilters.venues.size === 0 || activeFilters.venues.has(party.venue);
-        const matchesGenre = activeFilters.genres.size === 0 || activeFilters.genres.has(party.genre);
-        const matchesPrice = party.price <= activeFilters.maxPrice;
-
-        return matchesCity && matchesVenue && matchesPrice && matchesGenre;
+        // City filter
+        const cityMatch = activeFilters.cities.size === 0 || activeFilters.cities.has(party.city);
+        
+        // Venue filter
+        const venueMatch = activeFilters.venues.size === 0 || activeFilters.venues.has(party.venue);
+        
+        // Genre filter
+        const genreMatch = activeFilters.genres.size === 0 || party.genre.split(', ').some(genre => activeFilters.genres.has(genre.trim()));
+        
+        // Price filter
+        const priceMatch = party.price <= activeFilters.maxPrice;
+        
+        return cityMatch && venueMatch && genreMatch && priceMatch;
     });
 
-    displayParties(filteredParties);
+    renderParties(filteredParties);
 }
 
-// Update the active filters display
+// Function to render the parties as collapsible Bootstrap Cards
+function renderParties(filteredParties) {
+    const partyList = document.getElementById('partyList');
+    partyList.innerHTML = ''; // Clear existing cards
+
+    if (filteredParties.length === 0) {
+        partyList.innerHTML = '<div class="col-12"><p class="text-white-50">No parties match your current filters. Try adjusting your selection.</p></div>';
+        return;
+    }
+
+    filteredParties.forEach(party => {
+        const collapseId = `collapse-${party.id}`;
+
+        const cardCol = document.createElement('div');
+        // Bootstrap responsive grid classes
+        cardCol.className = 'col-12 col-sm-6 col-lg-4'; 
+
+        const card = document.createElement('div');
+        // Custom class for styling, h-100 for equal height cards
+        card.className = 'card h-100 party-card border-0'; 
+
+        // Card Image
+        const image = document.createElement('img');
+        image.src = party.image;
+        image.className = 'card-img-top party-image';
+        image.alt = party.name;
+        card.appendChild(image);
+
+        // Card Header (Always visible part with Name and City)
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'card-header p-0';
+
+        // Collapse Button (The clickable part)
+        const collapseButton = document.createElement('button');
+        collapseButton.className = 'btn text-start w-100 p-3';
+        collapseButton.type = 'button';
+        collapseButton.setAttribute('data-bs-toggle', 'collapse');
+        collapseButton.setAttribute('data-bs-target', `#${collapseId}`); // Target the collapsible body
+        collapseButton.setAttribute('aria-expanded', 'false');
+        collapseButton.setAttribute('aria-controls', collapseId);
+        collapseButton.innerHTML = `
+            <h5 class="card-title mb-0">${party.name}</h5>
+            <p class="card-subtitle mb-0 text-white-50">${party.city}</p>
+        `;
+
+        cardHeader.appendChild(collapseButton);
+        card.appendChild(cardHeader);
+
+        // Collapsible Body (Details)
+        const collapseDiv = document.createElement('div');
+        collapseDiv.id = collapseId;
+        collapseDiv.className = 'collapse'; // Start collapsed
+
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body text-white';
+
+        cardBody.innerHTML = `
+            <hr class="text-white-50">
+            <p class="card-text mb-1"><strong>Venue:</strong> ${party.venue}</p>
+            <p class="card-text mb-1"><strong>Genre:</strong> ${party.genre}</p>
+            <p class="card-text mb-3"><strong>Price:</strong> ${party.price}€</p>
+            <a href="${party.ticketLink}" target="_blank" class="btn btn-sm" style="background-color: #ff6b00; color: white;">
+                Get Tickets <i class="bi bi-arrow-right-short"></i>
+            </a>
+        `;
+        
+        collapseDiv.appendChild(cardBody);
+        card.appendChild(collapseDiv);
+        
+        cardCol.appendChild(card);
+        partyList.appendChild(cardCol);
+    });
+}
+
+// Function to update the display of active filters (Bootstrap Badges)
 function updateActiveFilters() {
     const activeFiltersContainer = document.getElementById('activeFilters');
-    const chipsInstance = M.Chips.getInstance(activeFiltersContainer);
-    
-    // Clear existing chips
-    chipsInstance.chips = [];
+    activeFiltersContainer.innerHTML = ''; 
 
-    // Add city filters
-    activeFilters.cities.forEach(city => {
-        chipsInstance.addChip({
-            tag: city,
-            icon: 'location_city'
-        });
-    });
+    const allActiveFilters = [
+        ...Array.from(activeFilters.cities),
+        ...Array.from(activeFilters.venues),
+        ...Array.from(activeFilters.genres)
+    ];
 
-    // Add venue filters
-    activeFilters.venues.forEach(venue => {
-        addActiveFilterTag(venue, () => {
-            activeFilters.venues.delete(venue);
-            document.querySelector(`input[value="${venue}"]`).checked = false;
-            filterParties();
-            updateActiveFilters();
-        });
-    });
-
-    // Add genre filters
-    activeFilters.genres.forEach(genre => {
-        addActiveFilterTag(genre, () => {
-            activeFilters.genres.delete(genre);
-            document.querySelector(`input[value="${genre}"]`).checked = false;
-            filterParties();
-            updateActiveFilters();
-        });
-    });
-
-    // Add price filter if not at maximum
     if (activeFilters.maxPrice < 50) {
-        addActiveFilterTag(`Max ${activeFilters.maxPrice}€`, () => {
-            activeFilters.maxPrice = 50;
-            document.getElementById('priceSlider').value = 50;
-            document.getElementById('priceValue').textContent = '0-50€';
-            filterParties();
-            updateActiveFilters();
-        });
+        allActiveFilters.push(`Max Price: ${activeFilters.maxPrice}€`);
     }
-}
 
-// Display filtered parties in the list
-function displayParties(partiesToShow) {
-    const partyList = document.getElementById('partyList');
-    partyList.innerHTML = '';
-
-    partiesToShow.forEach(party => {
-        const col = document.createElement('div');
-        col.className = 'col s12 m6 l4';
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <div class="card-image">
-                <img src="${party.image}" alt="${party.name}">
-                <span class="card-title">${party.name}</span>
-            </div>
-            <div class="card-content">
-                <p><i class="material-icons tiny">location_on</i> ${party.venue}</p>
-                <p><i class="material-icons tiny">location_city</i> ${party.city}</p>
-                <p><i class="material-icons tiny">music_note</i> ${party.genre}</p>
-                <p><i class="material-icons tiny">euro_symbol</i> ${party.price}€</p>
-            </div>
-            <div class="card-action">
-                <a href="${party.ticketLink}" class="btn waves-effect waves-light" target="_blank">
-                    <i class="material-icons left">confirmation_number</i>
-                    Buy Tickets
-                </a>
-            </div>
-        `;
+    allActiveFilters.forEach(filterText => {
+        const isPriceFilter = filterText.startsWith('Max Price:');
         
-        partyList.appendChild(card);
+        const filterBadge = document.createElement('span');
+        // Use custom styling to override default Bootstrap colors for a dark/orange theme
+        filterBadge.className = 'badge text-white p-2 d-flex align-items-center gap-1';
+        filterBadge.textContent = filterText;
+        filterBadge.style.backgroundColor = '#ff6b00'; 
+        filterBadge.style.borderRadius = '50px'; // Pill shape
+
+        if (!isPriceFilter) {
+            const removeButton = document.createElement('button');
+            removeButton.className = 'btn-close btn-close-white ms-1';
+            removeButton.type = 'button';
+            removeButton.setAttribute('aria-label', 'Remove filter');
+            removeButton.addEventListener('click', () => {
+                removeFilter(filterText);
+            });
+            filterBadge.appendChild(removeButton);
+        }
+        
+        activeFiltersContainer.appendChild(filterBadge);
     });
 }
 
-// Helper function to add active filter tags
-function addActiveFilterTag(text, removeCallback) {
-    const activeFiltersContainer = document.getElementById('activeFilters');
-    const tag = document.createElement('div');
-    tag.className = 'active-filter';
-    tag.innerHTML = `
-        ${text}
-        <button>×</button>
-    `;
-    tag.querySelector('button').addEventListener('click', removeCallback);
-    activeFiltersContainer.appendChild(tag);
-}
-
-// Clear all filters
-function clearAllFilters() {
-    activeFilters.cities.clear();
-    activeFilters.venues.clear();
-    activeFilters.genres.clear();
-    activeFilters.maxPrice = 50;
-
-    // Reset UI elements
-    document.querySelectorAll('.city-tag').forEach(tag => tag.classList.remove('active'));
-    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
-    const priceSlider = document.getElementById('priceSlider');
-    const priceValue = document.getElementById('priceValue');
-    priceSlider.value = 50;
-    priceValue.textContent = '0-50€';
-
-    filterParties();
-    updateActiveFilters();
-}
-
-// Initialize the application
-function init() {
-    initializeFilters();
-    filterParties(); // Show all parties initially
-    updateActiveFilters(); // Initialize active filters display
-}
-
-// Start the application when the page loads
-document.addEventListener('DOMContentLoaded', init);
-
-// Clear all filters
-function clearAllFilters() {
-    activeFilters.cities.clear();
-    activeFilters.venues.clear();
-    activeFilters.genres.clear();
-    activeFilters.maxPrice = 50;
-
-    // Reset UI elements
-    document.querySelectorAll('.city-tag').forEach(tag => tag.classList.remove('active'));
-    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
-    document.getElementById('priceSlider').value = 50;
-    document.getElementById('priceValue').textContent = '0-50€';
-
-    filterParties();
-    updateActiveFilters();
-}
-
-// Display filtered parties in the list
-function displayParties(partiesToShow) {
-    const partyList = document.getElementById('partyList');
-    partyList.innerHTML = '';
-
-    partiesToShow.forEach(party => {
-        const card = document.createElement('div');
-        card.className = 'party-card';
-        
-        card.className = 'party-card z-depth-1 hoverable';
-        card.innerHTML = `
-            <img src="${party.image}" alt="${party.name}" class="party-image">
-            <div class="party-info">
-                <h2 class="party-name">${party.name}</h2>
-                <div class="party-details">
-                    <p>
-                        <i class="material-icons tiny">location_on</i>
-                        ${party.venue}
-                    </p>
-                    <p>
-                        <i class="material-icons tiny">business</i>
-                        ${party.city}
-                    </p>
-                    <p>
-                        <i class="material-icons tiny">music_note</i>
-                        ${party.genre}
-                    </p>
-                    <p>
-                        <i class="material-icons tiny">euro_symbol</i>
-                        ${party.price}€
-                    </p>
-                </div>
-                <a href="${party.ticketLink}" class="ticket-button waves-effect waves-light" target="_blank">
-                    <i class="material-icons left">confirmation_number</i>
-                    Buy Tickets
-                </a>
-            </div>
-        `;
-        
-        partyList.appendChild(card);
-    });
-}
-
-// Remove filter by its text content
-function removeFilterByText(filterText) {
-    // Handle price filter
-    if (filterText.includes('€')) {
-        activeFilters.maxPrice = 50;
-        document.getElementById('priceSlider').value = 50;
-        document.getElementById('priceValue').textContent = '0-50€';
-    }
-    // Handle city filters
-    else if (activeFilters.cities.has(filterText)) {
+// Function to remove a filter and update the UI
+function removeFilter(filterText) {
+    if (activeFilters.cities.has(filterText)) {
         activeFilters.cities.delete(filterText);
-        document.querySelector(`[data-city="${filterText}"]`).classList.remove('active');
     }
-    // Handle venue filters
     else if (activeFilters.venues.has(filterText)) {
         activeFilters.venues.delete(filterText);
-        document.querySelector(`input[value="${filterText}"]`).checked = false;
     }
-    // Handle genre filters
     else if (activeFilters.genres.has(filterText)) {
         activeFilters.genres.delete(filterText);
-        document.querySelector(`input[value="${filterText}"]`).checked = false;
     }
+
+    // Uncheck the corresponding checkboxes for both desktop and mobile lists
+    document.querySelectorAll(`input[value="${filterText}"]`).forEach(checkbox => {
+        checkbox.checked = false;
+    });
 
     filterParties();
     updateActiveFilters();
 }
 
-// Initialize Material components and event listeners
-function initializeMaterialComponents() {
-    // Initialize mobile sidenav
-    const mobileMenu = document.querySelector('.sidenav');
-    M.Sidenav.init(mobileMenu);
-
-    // Initialize filters sidenav for mobile
-    const filtersSidenav = document.querySelector('#filtersSidenav');
-    M.Sidenav.init(filtersSidenav, {
-        edge: 'left',
-        draggable: true,
-        preventScrolling: true
-    });
-
-    // Add event listeners for filter toggle buttons
-    document.querySelectorAll('.toggle-filters').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const instance = M.Sidenav.getInstance(filtersSidenav);
-            instance.isOpen ? instance.close() : instance.open();
-        });
-    });
-}
-
 // Initialize the application
 function init() {
-    initializeMaterialComponents();
+    // Removed Materialize initialization
     initializeFilters();
     filterParties(); // Show all parties initially
     updateActiveFilters(); // Initialize active filters display

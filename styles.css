@@ -7,176 +7,44 @@ body {
     margin: 0;
 }
 
-.layout {
-    display: flex;
-    min-height: 100vh;
-    padding-top: 64px;
-}
-
-.top-nav {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-}
-
-.top-nav h1 {
-    font-size: 2rem;
-    margin: 0;
-    padding: 0.5rem 0;
-}
-
-.filters-sidebar {
-    width: 300px;
+/* Custom Theming & Layout Adjustments for Bootstrap */
+/* Styles for the desktop filter sidebar */
+#filtersSidebar {
     background-color: #2a2a2a;
-    padding: 1.5rem;
-    position: fixed;
-    height: calc(100vh - 64px);
-    overflow-y: auto;
     border-right: 2px solid #ff6b00;
+    min-height: 100%;
 }
 
-.main-content {
-    flex: 1;
-    margin-left: 300px;
-    padding: 2rem;
+h5 {
+    color: #ff6b00; /* Orange color for filter headings */
+    font-weight: 500;
 }
 
-h1 {
-    color: #ff6b00;
-    margin-bottom: 2rem;
-    font-size: 2.5rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-h2 {
-    color: #ff6b00;
-    margin-bottom: 1.5rem;
-    font-size: 1.8rem;
-}
-
-h3 {
-    color: #fff;
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-}
-
-.filter-section {
-    margin-bottom: 2rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid #3a3a3a;
-}
-
-.city-tags {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.city-tag {
-    padding: 0.5rem 1rem;
-    background-color: #3a3a3a;
-    border: none;
-    color: #fff;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.city-tag.active {
-    background-color: #ff6b00;
-}
-
-.price-slider {
-    padding: 0 0.5rem;
-}
-
-input[type="range"] {
-    width: 100%;
-    background: #3a3a3a;
-    height: 6px;
-    border-radius: 3px;
-    -webkit-appearance: none;
-    appearance: none;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: #ff6b00;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-.price-labels {
-    text-align: center;
-    margin-top: 0.5rem;
-}
-
+/* Filter List (Bootstrap List Group) */
 .filter-list {
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.filter-list label {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.filter-list label:hover {
-    background-color: #3a3a3a;
-}
-
-.filter-list input[type="checkbox"] {
-    margin-right: 0.5rem;
-}
-
-.active-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.active-filter {
-    background-color: #ff6b00;
-    color: #fff;
-    padding: 0.3rem 0.8rem;
-    border-radius: 15px;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.active-filter button {
-    background: none;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1.2rem;
-    padding: 0;
-    display: flex;
-    align-items: center;
-}
-
-.party-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.party-card {
     background-color: #2a2a2a;
+    border-radius: 0.25rem;
+}
+
+/* Styling for List Group Items (filters) */
+.list-group-item {
+    background-color: #2a2a2a !important;
+    color: #fff;
+    border-color: #444 !important; /* Darker border for separation */
+    cursor: pointer;
+}
+
+.list-group-item:hover {
+    background-color: #333 !important;
+}
+
+/* Party Card Styles */
+.party-card {
+    background-color: #2a2a2a !important;
     border-radius: 8px;
     overflow: hidden;
     transition: transform 0.2s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
 }
 
 .party-card:hover {
@@ -189,51 +57,28 @@ input[type="range"]::-webkit-slider-thumb {
     object-fit: cover;
 }
 
-.party-info {
-    padding: 1.5rem;
+/* Style the collapsible button inside the card to look like a clickable card-header */
+.party-card .card-header {
+    background-color: #2a2a2a !important;
+    border-bottom: 0;
+    cursor: pointer;
 }
 
-.party-name {
-    font-size: 1.5rem;
-    color: #ff6b00;
-    margin-bottom: 0.5rem;
-}
-
-.party-details {
-    margin-bottom: 1rem;
-}
-
-.party-details p {
-    margin-bottom: 0.3rem;
-}
-
-.ticket-button {
-    display: inline-block;
-    padding: 0.8rem 1.5rem;
-    background-color: #ff6b00;
-    color: #fff;
+/* Style for the button text (Name and City) */
+.party-card .card-header .btn {
+    color: #ff6b00 !important;
     text-decoration: none;
-    border-radius: 4px;
-    transition: background-color 0.2s;
 }
 
-.ticket-button:hover {
-    background-color: #ff8533;
+/* Optional: change the button's background on collapse to indicate state */
+.party-card .card-header .btn:not(.collapsed) {
+    background-color: #333 !important;
 }
 
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #2a2a2a;
-}
-
-::-webkit-scrollbar-thumb {
+/* Price Slider Track Color - Adjust to your theme */
+.form-range::-webkit-slider-thumb {
     background: #ff6b00;
-    border-radius: 4px;
 }
-
-::-webkit-scrollbar-thumb:hover {
-    background: #ff8533;
+.form-range::-moz-range-thumb {
+    background: #ff6b00;
 }
