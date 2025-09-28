@@ -97,23 +97,23 @@ function initializeFilters() {
     document.getElementById('clearFilters').addEventListener('click', clearAllFilters);
 }
 
-// Initialize Material Design components
+// Initialize Material Design components and event listeners
 function initializeMaterialComponents() {
-    // Initialize mobile sidenav
-    const mobileMenu = document.querySelector('#mobile-demo');
-    M.Sidenav.init(mobileMenu);
+    // Initialize sidenav for mobile filters
+    const mobileFilters = document.querySelector('#mobile-filters');
+    M.Sidenav.init(mobileFilters, {
+        edge: 'right',
+        draggable: true
+    });
 
-    // Initialize filters sidenav for mobile
-    const filtersSidenav = document.querySelector('#filtersSidenav');
-    M.Sidenav.init(filtersSidenav, {
-        edge: 'left',
-        draggable: true,
-        preventScrolling: true,
-        onOpenStart: () => {
-            document.body.classList.add('sidenav-open');
-        },
-        onCloseStart: () => {
-            document.body.classList.remove('sidenav-open');
+    // Initialize chips for active filters
+    const chips = document.querySelectorAll('.chips');
+    M.Chips.init(chips, {
+        placeholder: 'Active filters',
+        secondaryPlaceholder: '+Filter',
+        onChipDelete: (el, chip) => {
+            const filterText = chip.textContent.trim();
+            removeFilterByText(filterText);
         }
     });
 
@@ -144,15 +144,16 @@ function filterParties() {
 // Update the active filters display
 function updateActiveFilters() {
     const activeFiltersContainer = document.getElementById('activeFilters');
-    activeFiltersContainer.innerHTML = '';
+    const chipsInstance = M.Chips.getInstance(activeFiltersContainer);
+    
+    // Clear existing chips
+    chipsInstance.chips = [];
 
     // Add city filters
     activeFilters.cities.forEach(city => {
-        addActiveFilterTag(city, () => {
-            activeFilters.cities.delete(city);
-            document.querySelector(`[data-city="${city}"]`).classList.remove('active');
-            filterParties();
-            updateActiveFilters();
+        chipsInstance.addChip({
+            tag: city,
+            icon: 'location_city'
         });
     });
 
@@ -194,19 +195,27 @@ function displayParties(partiesToShow) {
     partyList.innerHTML = '';
 
     partiesToShow.forEach(party => {
+        const col = document.createElement('div');
+        col.className = 'col s12 m6 l4';
+
         const card = document.createElement('div');
-        card.className = 'party-card';
+        card.className = 'card';
         card.innerHTML = `
-            <img src="${party.image}" alt="${party.name}" class="party-image">
-            <div class="party-info">
-                <h2 class="party-name">${party.name}</h2>
-                <div class="party-details">
-                    <p>🏢 ${party.venue}</p>
-                    <p>🌆 ${party.city}</p>
-                    <p>🎵 ${party.genre}</p>
-                    <p>💰 ${party.price}€</p>
-                </div>
-                <a href="${party.ticketLink}" class="ticket-button" target="_blank">Buy Tickets</a>
+            <div class="card-image">
+                <img src="${party.image}" alt="${party.name}">
+                <span class="card-title">${party.name}</span>
+            </div>
+            <div class="card-content">
+                <p><i class="material-icons tiny">location_on</i> ${party.venue}</p>
+                <p><i class="material-icons tiny">location_city</i> ${party.city}</p>
+                <p><i class="material-icons tiny">music_note</i> ${party.genre}</p>
+                <p><i class="material-icons tiny">euro_symbol</i> ${party.price}€</p>
+            </div>
+            <div class="card-action">
+                <a href="${party.ticketLink}" class="btn waves-effect waves-light" target="_blank">
+                    <i class="material-icons left">confirmation_number</i>
+                    Buy Tickets
+                </a>
             </div>
         `;
         
@@ -314,6 +323,34 @@ function displayParties(partiesToShow) {
         
         partyList.appendChild(card);
     });
+}
+
+// Remove filter by its text content
+function removeFilterByText(filterText) {
+    // Handle price filter
+    if (filterText.includes('€')) {
+        activeFilters.maxPrice = 50;
+        document.getElementById('priceSlider').value = 50;
+        document.getElementById('priceValue').textContent = '0-50€';
+    }
+    // Handle city filters
+    else if (activeFilters.cities.has(filterText)) {
+        activeFilters.cities.delete(filterText);
+        document.querySelector(`[data-city="${filterText}"]`).classList.remove('active');
+    }
+    // Handle venue filters
+    else if (activeFilters.venues.has(filterText)) {
+        activeFilters.venues.delete(filterText);
+        document.querySelector(`input[value="${filterText}"]`).checked = false;
+    }
+    // Handle genre filters
+    else if (activeFilters.genres.has(filterText)) {
+        activeFilters.genres.delete(filterText);
+        document.querySelector(`input[value="${filterText}"]`).checked = false;
+    }
+
+    filterParties();
+    updateActiveFilters();
 }
 
 // Initialize Material components and event listeners

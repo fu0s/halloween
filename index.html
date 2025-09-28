@@ -9,73 +9,88 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
-    <div class="layout">
-        <nav class="top-nav orange darken-3">
-            <div class="nav-wrapper">
-                <div class="container">
-                    <h1 class="brand-logo">Halloween Parties 2025</h1>
+<body>
+    <nav class="nav-extended orange darken-3">
+        <div class="nav-wrapper">
+            <div class="container">
+                <a href="#" class="brand-logo">
+                    <i class="material-icons">theater_comedy</i>
+                    Halloween Parties
+                </a>
+                <a href="#" data-target="mobile-filters" class="sidenav-trigger">
+                    <i class="material-icons">menu</i>
+                </a>
+            </div>
+        </div>
+        <div class="nav-content orange darken-4">
+            <div class="container">
+                <div id="activeFilters" class="chips chips-placeholder">
+                    <!-- Active filters will be shown here -->
                 </div>
             </div>
-        </nav>
+        </div>
+    </nav>
 
-        <div class="filters-sidebar z-depth-2">
-            <div class="sidebar-header">
-                <h2>Filters</h2>
-                <button id="clearFilters" class="btn-flat waves-effect waves-orange">
-                    <i class="material-icons left">clear_all</i>Clear
+    <!-- Mobile Sidenav for Filters -->
+    <ul id="mobile-filters" class="sidenav">
+        <li>
+            <div class="sidenav-header orange darken-3 white-text">
+                <h4 class="center-align">Filters</h4>
+                <button id="clearFilters" class="btn-flat waves-effect waves-light white-text">
+                    <i class="material-icons left">clear_all</i>Clear All
                 </button>
             </div>
-            
+        </li>
+        <li>
             <div class="filter-section">
-                <h3>Cities</h3>
-                <div id="cityTags" class="city-tags">
-                    <div class="chip city-tag hoverable" data-city="Düsseldorf">
+                <h5>Cities</h5>
+                <div id="cityTags" class="city-tags center-align">
+                    <div class="chip city-tag" data-city="Düsseldorf">
                         <i class="material-icons tiny">location_city</i>
                         Düsseldorf
                     </div>
-                    <div class="chip city-tag hoverable" data-city="Köln">
+                    <div class="chip city-tag" data-city="Köln">
                         <i class="material-icons tiny">location_city</i>
                         Köln
                     </div>
                 </div>
             </div>
-
+        </li>
+        <li>
             <div class="filter-section">
-                <h3>Price Range</h3>
+                <h5>Price Range</h5>
                 <div class="price-slider">
                     <p class="range-field">
                         <input type="range" id="priceSlider" min="0" max="50" value="50" />
                     </p>
-                    <div class="price-labels">
+                    <div class="price-labels center-align">
                         <span id="priceValue" class="orange-text">0-50€</span>
                     </div>
                 </div>
             </div>
-
+        </li>
+        <li>
             <div class="filter-section">
-                <h3>Venues</h3>
+                <h5>Venues</h5>
                 <div id="venueList" class="collection filter-list">
                     <!-- Venues will be added here -->
                 </div>
             </div>
-
+        </li>
+        <li>
             <div class="filter-section">
-                <h3>Genres</h3>
+                <h5>Genres</h5>
                 <div id="genreList" class="collection filter-list">
                     <!-- Genres will be added here -->
                 </div>
             </div>
-        </div>
+        </li>
+    </ul>
 
-        <div class="main-content">
-            <div class="container">
-                <div id="activeFilters" class="active-filters">
-                    <!-- Active filters will be shown here -->
-                </div>
-                <div id="partyList" class="party-list">
-                    <!-- Party cards will be inserted here -->
-                </div>
-            </div>
+    <!-- Main Content -->
+    <div class="container">
+        <div id="partyList" class="row">
+            <!-- Party cards will be inserted here -->
         </div>
     </div>
 
